@@ -11,12 +11,12 @@ import { BaseProgram } from "./base";
 export class BasicProgram extends BaseProgram {
     public program: WebGLProgram;
 
-    attributeLocations: {
+    public attributeLocations: {
         vertexPosition: number;
         vertexColor: number;
     };
     
-    uniformLocations: {
+    public uniformLocations: {
         projectionMatrix: WebGLUniformLocation;
         modelViewMatrix: WebGLUniformLocation;
     };
