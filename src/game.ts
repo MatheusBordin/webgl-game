@@ -47,10 +47,7 @@ export class Game {
      */
     private setControls() {
         this.control
-            .onChange((keysPress, oldMouse, currMouse) => {
-                console.log(oldMouse, currMouse);
-                this.camera.control(this.scene.frameTime, keysPress, oldMouse, currMouse);
-            });
+            .onChange((keysPress, oldMouse, currMouse) => this.camera.control(this.scene.frameTime, keysPress, oldMouse, currMouse));
 
         this.control.onResize(() => {
             this.scene.configureSize();

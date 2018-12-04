@@ -3,14 +3,19 @@ import { BaseObject } from "./base";
 import { IObjectBuffer } from "../types/object-buffer";
 import { BaseProgram } from "../programs/base";
 import { IPosition } from "../types/position";
+import { Color } from "../helpers/color";
 
 export class Cube extends BaseObject {
     private size: number;
+    private color: number[];
+    private topColor: number[];
 
-    constructor(context: WebGLRenderingContext, program: BaseProgram, size: number) {
+    constructor(context: WebGLRenderingContext, program: BaseProgram, size: number, color = Color.Earth, topColor?: number[]) {
         super(context, program);
 
         this.size = size;
+        this.color = color;
+        this.topColor = topColor || this.color;
         this.initBuffers();
     }
 
@@ -125,12 +130,12 @@ export class Cube extends BaseObject {
 
     protected updateColorBuffer() {
         const faceColors = [
-            [1.0,  1.0,  1.0,  1.0],    // Front face: white
-            [1.0,  0.0,  0.0,  1.0],    // Back face: red
-            [0.0,  1.0,  0.0,  1.0],    // Top face: green
-            [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-            [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-            [1.0,  0.0,  1.0,  1.0],    // Left face: purple
+            this.color, 
+            this.color,     
+            this.color,  
+            this.topColor, 
+            this.color,  
+            this.color,  
         ];
 
         let colors: number[] = [];
