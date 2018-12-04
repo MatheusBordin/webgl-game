@@ -1,114 +1,60 @@
-import { BaseObject } from "./objects/base";
+import { Scene } from "./scene";
 import { Camera } from "./objects/camera";
+import { Control } from "./helpers/controls";
+import { BaseProgram } from "./programs/base";
+import { BasicProgram } from "./programs/basic";
+import { Surface } from "./objects/surface";
+import { Cube } from "./objects/cube";
 
 /**
- * Contain all game start logics. 
+ * Contain all logics of the game. 
  *
  * @export
  * @class Game
  */
 export class Game {
-    public canvas: HTMLCanvasElement;
-    private gl : WebGLRenderingContext;
-
-    private prevTime: number = 0;
-    private objects: BaseObject[] = [];
+    private scene: Scene;
     private camera: Camera;
+    private control: Control;
+    private program: BaseProgram;
+    private surface: Surface;
 
     constructor() {
-        try {
-            this.canvas = document.getElementById("game") as HTMLCanvasElement;
-            this.gl = this.canvas.getContext("webgl") || this.canvas.getContext("experimental-webgl");
-
-            this.configureSize();
-
-            if (!this.gl) {
-                throw new Error("Unable to initialize WebGL. Your browser or machine may not support it.")
-            }
-        } catch (e) {
-            console.log(e.message || e);
-        }
+        this.scene = new Scene();
+        this.program = new BasicProgram(this.scene.context);
+        this.camera = new Camera(this.scene.context, this.program);
+        this.surface = new Surface(this.scene.context, this.program, 10);
+        this.control = new Control();
     }
-
-    get context() {
-        return this.gl;
-    }
-
+    
     /**
-     * Start rendering.
+     * Init game.
      *
      * @memberof Game
      */
-    start() {
-        this.render(0);
-    }
+    public init() {
+        this.setControls();
+        this.scene.setCamera(this.camera);
+        this.scene.addObject(this.surface);
+        this.scene.start();
+    }   
 
     /**
-     * Configure canvas size.
-     *
-     * @memberof Game
-     */
-    configureSize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-    }
-
-    /**
-     * Add objects to scene.
-     *
-     * @param {...BaseObject[]} obj
-     * @memberof Game
-     */
-    addObject(...obj: BaseObject[]) {
-        this.objects.push(...obj);
-    }
-
-    /**
-     * Set camera in scene.
-     *
-     * @param {Camera} camera
-     * @memberof Game
-     */
-    setCamera(camera: Camera) {
-        this.camera = camera;
-    }
-
-    /**
-     * Called frame a frame.
+     * Set controls.
      *
      * @private
      * @memberof Game
      */
-    private render(now: number) {
-        const currTime = now * 0.001;
-        const deltaTime = currTime - this.prevTime;
-        this.prevTime = currTime;
-        
-        this.draw(deltaTime);
-        
-        requestAnimationFrame(this.render.bind(this));
-    }
+    private setControls() {
+        this.control
+            .onChange((keysPress, oldMouse, currMouse) => {
+                console.log(keysPress, oldMouse, currMouse);
+                this.camera.control(this.scene.frameTime, keysPress, oldMouse, currMouse);
+            });
 
-    /**
-     * Draw all objects in screen.
-     *
-     * @private
-     * @memberof Game
-     */
-    private draw(time: number) {
-        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        this.gl.clearDepth(1.0);
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.depthFunc(this.gl.LEQUAL);
-
-        this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-        // Draw camera;
-        this.camera.draw();
-
-        for (const item of this.objects) {
-            item.draw(time);
-        }
+        this.control.onResize(() => {
+            this.scene.configureSize();
+            this.camera.configure();
+        });
     }
 }
