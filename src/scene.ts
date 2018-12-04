@@ -51,6 +51,11 @@ export class Scene {
         this.render(0);
     }
 
+    /**
+     * Request pointer lock.
+     *
+     * @memberof Scene
+     */
     requestPointerLock() {
         const elem = this.canvas as any;
         const pl = elem.requestPointerLock ||

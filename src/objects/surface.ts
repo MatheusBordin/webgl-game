@@ -11,7 +11,7 @@ import { IPosition } from "../types/position";
  * @extends {BaseObject}
  */
 export class Surface extends BaseObject {
-    private matrix: BaseObject[][];
+    private matrix: BaseObject[][][];
     private initialPoint: IPosition = { x: 0, y: 0, z: 0 };
 
     constructor(
@@ -31,9 +31,11 @@ export class Surface extends BaseObject {
      * @memberof Surface
      */
     public draw(time: number) {
-        for (const slot of this.matrix) {
-            for (const object of slot) {
-                object.draw(time);
+        for (const line of this.matrix) {
+            for (const slot of line) {
+                for (const object of slot) {
+                    object.draw(time);
+                } 
             }
         }
     }
@@ -93,7 +95,7 @@ export class Surface extends BaseObject {
                     this.initialPoint.z + j * this.slotSize
                 );
                 
-                this.matrix[i][j] = cube;
+                this.matrix[i][j] = [cube];
             }
         }
     }
