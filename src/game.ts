@@ -23,7 +23,7 @@ export class Game {
         this.scene = new Scene();
         this.program = new BasicProgram(this.scene.context);
         this.camera = new Camera(this.scene.context, this.program);
-        this.surface = new Surface(this.scene.context, this.program, 10);
+        this.surface = new Surface(this.scene.context, this.program, 30);
         this.control = new Control();
     }
     
@@ -48,7 +48,7 @@ export class Game {
     private setControls() {
         this.control
             .onChange((keysPress, oldMouse, currMouse) => {
-                console.log(keysPress, oldMouse, currMouse);
+                console.log(oldMouse, currMouse);
                 this.camera.control(this.scene.frameTime, keysPress, oldMouse, currMouse);
             });
 

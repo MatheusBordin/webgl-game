@@ -6,11 +6,10 @@ import { IPosition } from "../types/position";
 
 export class Camera {
     private projectionMatrix: mat4;
-    private modelViewMatrix: mat4;
 
     private position: vec3 = vec3.create();
     private rotation: vec3 = vec3.create();
-    private movementSpeed = 10;
+    private movementSpeed = 12.5;
     private rotationSpeed = 0.01;
 
     constructor (
@@ -22,14 +21,11 @@ export class Camera {
         private aspect?: number
     ) {
         this.projectionMatrix = mat4.create();
-        this.modelViewMatrix = mat4.create();
         this.configure();
 
-        mat4.translate(
-            this.modelViewMatrix,
-            this.modelViewMatrix,
-            [15.0, -1.0, -40.0]
-        );
+        this.position[0] = 100;
+        this.position[1] = -8;
+        this.position[2] = 40;
     }
 
     /**
@@ -49,7 +45,7 @@ export class Camera {
         this.gl.uniformMatrix4fv(
             this.program.uniformLocations.modelViewMatrix,
             false,
-            this.viewMatrix
+            this.modelViewMatrix
         );
     }
 
@@ -108,17 +104,13 @@ export class Camera {
         this.rotateByPointer(prevMouse, currMouse);
     }
 
-    private get viewMatrix() {
-        mat4.rotateX(this.modelViewMatrix, this.modelViewMatrix, this.rotation[0]);
-        mat4.rotateY(this.modelViewMatrix, this.modelViewMatrix, this.rotation[1]);
-        if (this.rotation[2]) {
-            mat4.rotateZ(this.modelViewMatrix, this.modelViewMatrix, this.rotation[2] - Math.PI);
-        } 
-        mat4.translate(this.modelViewMatrix, this.modelViewMatrix, [-this.position[0], -this.position[1], -this.position[2]]);
-
-        this.rotation = vec3.create();
-
-        return this.modelViewMatrix;
+    private get modelViewMatrix() {
+        const out = mat4.create();
+        mat4.rotateX(out, out, this.rotation[0]);
+        mat4.rotateY(out, out, this.rotation[1]);
+        mat4.rotateZ(out, out, this.rotation[2] - Math.PI);
+        mat4.translate(out, out, [-this.position[0], -this.position[1], -this.position[2]]);
+        return out;
     }
 
     /**
@@ -130,12 +122,14 @@ export class Camera {
      * @memberof Camera
      */
     private moveByDirection(direction: IPosition) {
-        if (direction.x === 0 || direction.y === 0 || direction.z === 0) {
+        if (direction.x === 0 && direction.y === 0 && direction.z === 0) {
             return;
         }
 
         const dirVector = vec3.create();
-        dirVector.set([direction.x, direction.y, direction.z]);
+        dirVector[0] = direction.x;
+        dirVector[1] = direction.y;
+        dirVector[2] = direction.z; 
         
         var cam = mat4.create();
         mat4.rotateY(cam, cam, this.rotation[1]);
@@ -152,7 +146,7 @@ export class Camera {
      * @memberof Camera
      */
     private rotateByPointer(prevMouse: IMousePoint, currMouse: IMousePoint) {
-        var deltaMouse = [currMouse.x - prevMouse.x, currMouse.x- prevMouse.x];
+        var deltaMouse = [currMouse.x - prevMouse.x, currMouse.y - prevMouse.y];
         this.rotation[1] += deltaMouse[0] * this.rotationSpeed;
 
         if (this.rotation[1] < 0) {

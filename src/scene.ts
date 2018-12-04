@@ -20,6 +20,9 @@ export class Scene {
         try {
             this.canvas = document.getElementById("game") as HTMLCanvasElement;
             this.gl = this.canvas.getContext("webgl") || this.canvas.getContext("experimental-webgl");
+            this.requestPointerLock();
+            
+            this.canvas.addEventListener('click', this.requestPointerLock.bind(this));
 
             this.configureSize();
 
@@ -46,6 +49,17 @@ export class Scene {
      */
     start() {
         this.render(0);
+    }
+
+    requestPointerLock() {
+        const elem = this.canvas as any;
+        const pl = elem.requestPointerLock ||
+              elem.webkitRequestPointerLock ||
+              elem.mozRequestPointerLock ||
+              elem.msRequestPointerLock ||
+              elem.oRequestPointerLock ||
+              function() {};
+        pl.call(elem);
     }
 
     /**

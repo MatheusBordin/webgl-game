@@ -6,7 +6,8 @@ type ChangeCallback = (keysPress?: IMoveDirection, oldMouse?: IMousePoint, currM
 export class Control {
     private changeCallback: ChangeCallback = () => null;
     private resizeCallback: () => void = () => null;
-    private mousePoint: IMousePoint;
+    private oldMousePoint: IMousePoint = { x: 0, y: 0 };
+    private mousePoint: IMousePoint = { x: 0, y: 0 };
     private keysPress: IMoveDirection = {
         left: false,
         right: false,
@@ -36,23 +37,16 @@ export class Control {
         this.resizeCallback = cb;
     }
 
-    private onMouseMove(event: MouseEvent) {
-        if (!this.mousePoint) {
-            this.mousePoint = {
-                x: event.clientX,
-                y: event.clientY
-            };
-        }
+    private onMouseMove(event: any) {
+        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+        const movementY = event.movementY || event.mozMovementY|| event.webkitMovementY || 0;
+        this.mousePoint.x += movementX;
+        this.mousePoint.y += movementY;
 
-        const oldMousePoint: IMousePoint = {
-            x: this.mousePoint.x,
-            y: this.mousePoint.y
-        };
-
-        this.mousePoint.x = event.clientX;
-        this.mousePoint.y = event.clientY;
-
-        this.changeCallback(this.keysPress, oldMousePoint, this.mousePoint);
+        this.changeCallback(this.keysPress, this.oldMousePoint, this.mousePoint);
+        
+        this.oldMousePoint.x = this.mousePoint.x = window.innerWidth >> 1;
+        this.oldMousePoint.y = this.mousePoint.y = window.innerHeight >> 1;
     }
 
     private onKeyDown(event: KeyboardEvent) {
