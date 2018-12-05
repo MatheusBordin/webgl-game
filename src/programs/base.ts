@@ -10,12 +10,15 @@ export abstract class BaseProgram {
 
     public attributeLocations: {
         vertexPosition: number;
-        vertexColor: number;
+        vertexNormal: number;
+        textureCoord: number;
     };
     
     public uniformLocations: {
         projectionMatrix: WebGLUniformLocation;
         modelViewMatrix: WebGLUniformLocation;
+        normalMatrix: WebGLUniformLocation;
+        uSampler: WebGLUniformLocation;
     };
 
     protected abstract buildProgram(): void;

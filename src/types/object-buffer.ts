@@ -1,5 +1,6 @@
 export interface IObjectBuffer {
-    color: WebGLBuffer;
+    normal: WebGLBuffer;
+    texture: WebGLBuffer;
     position: WebGLBuffer;
     indices: WebGLBuffer;
 }

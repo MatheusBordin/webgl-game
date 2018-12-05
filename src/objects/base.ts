@@ -6,13 +6,11 @@ export abstract class BaseObject {
     protected context: WebGLRenderingContext;
     protected program: BaseProgram;
     protected position: IPosition = { x: 0, y: 0, z: 0 };
-    protected buffers: IObjectBuffer = { position: null, color: null, indices: null };
+    protected buffers: IObjectBuffer = { position: null, texture: null, normal: null, indices: null };
 
     public abstract draw(time: number): void;
     protected abstract initBuffers(): void;
     protected abstract updatePositionBuffer(): void;
-    protected abstract updateColorBuffer(): void;
-    protected abstract updateIndicesBuffer(): void;
 
     constructor(context: WebGLRenderingContext, program: BaseProgram) {
         this.context = context;

@@ -120,7 +120,7 @@ export class Scene {
      * @memberof Game
      */
     private draw(time: number) {
-        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.clearColor(104/255, 203/255 , 241/255, 1.0);
         this.gl.clearDepth(1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);

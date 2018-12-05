@@ -9,7 +9,7 @@ export class Camera {
 
     private position: vec3 = vec3.create();
     private rotation: vec3 = vec3.create();
-    private movementSpeed = 12.5;
+    private movementSpeed = 500.0;
     private rotationSpeed = 0.01;
 
     constructor (
@@ -17,7 +17,7 @@ export class Camera {
         private readonly program: BaseProgram,
         private fieldOfView = 45 * Math.PI / 180,
         private zNear = 0.1,
-        private zFar = 100,
+        private zFar = 200,
         private aspect?: number
     ) {
         this.projectionMatrix = mat4.create();
@@ -35,6 +35,10 @@ export class Camera {
      */
     public draw() {
         this.gl.useProgram(this.program.program);
+
+        const normalMatrix = mat4.create();
+        mat4.invert(normalMatrix, this.modelViewMatrix);
+        mat4.transpose(normalMatrix, normalMatrix);
         
         this.gl.uniformMatrix4fv(
             this.program.uniformLocations.projectionMatrix,
@@ -46,6 +50,12 @@ export class Camera {
             this.program.uniformLocations.modelViewMatrix,
             false,
             this.modelViewMatrix
+        );
+
+        this.gl.uniformMatrix4fv(
+            this.program.uniformLocations.normalMatrix,
+            false,
+            normalMatrix
         );
     }
 
@@ -76,7 +86,7 @@ export class Camera {
      * @memberof Camera
      */
     public control(time: number, moveIn: IMoveDirection, prevMouse: IMousePoint, currMouse: IMousePoint) {
-        const speed = this.movementSpeed * time / 1000;
+        const speed = this.movementSpeed / 1000;
         const direction: IPosition = { x: 0, y: 0, z: 0 };
 
         // Z Axies

@@ -35,7 +35,13 @@ export class Surface extends BaseObject {
     public draw(time: number) {
         for (const line of this.matrix) {
             for (const slot of line) {
-                for (const object of slot) {
+                for (let i = slot.length - 1; i >= 0; i--) {
+                    const object = slot[i];
+
+                    if (object instanceof Cube) {
+                        object.setGrassArround(i === slot.length - 1);
+                    }
+
                     object.draw(time);
                 } 
             }
@@ -90,7 +96,7 @@ export class Surface extends BaseObject {
             this.matrix[i] = new Array(this.worldSize);
 
             for (let j = 0; j < this.worldSize; j++) {
-                const cube = new Cube(this.context, this.program, this.slotSize, Color.Earth, Color.Grass);
+                const cube = new Cube(this.context, this.program, this.slotSize);
                 cube.translate(
                     this.initialPoint.x + i * this.slotSize, 
                     this.initialPoint.y,
@@ -104,28 +110,77 @@ export class Surface extends BaseObject {
         this.randomizeSurface();
     }
 
+    /**
+     * Randomize surface
+     *
+     * @private
+     * @memberof Surface
+     */
     private randomizeSurface() {
+        const generateX = (radius = 0) => Math.floor(Math.random() * (this.worldSize - radius * 2)) + radius;
+        const generateZ = (radius = 0) => Math.floor(Math.random() * (this.worldSize - radius * 2)) + radius;
+
         for (let i = 0; i < 5; i++) {
             const randomRadius = Math.floor(Math.random() * 4) + 1;
-            const item: IBlackListItem = {
-                radius: randomRadius,
-                x: Math.floor(Math.random() * (this.worldSize - randomRadius * 2)) + randomRadius,
-                z: Math.floor(Math.random() * (this.worldSize - randomRadius * 2)) + randomRadius
-            };
+            const randomBlockCount = Math.floor(Math.random() * 15) + 5;
 
-            console.log(item);
-
-            this.createMountain(item.x, item.z, item.radius);
+            this.createMountain(generateX(randomRadius), generateZ(randomRadius), randomRadius);
+            this.createSurfaces(generateX(), generateZ(), randomBlockCount);
         }
     }
 
+    /**
+     * Create surfaces.
+     *
+     * @private
+     * @param {number} x Position x to initialize surface.
+     * @param {number} z Position z to initialize surface.
+     * @param {number} blocks Blocks count in surface.
+     * @memberof Surface
+     */
+    private createSurfaces(x: number, z: number, blocks: number) {
+        let currX = x;
+        let currZ = z;
+
+        while (blocks > 0) {
+            const incX = Math.floor(Math.random() * 3) - 1;
+            const incZ = Math.floor(Math.random() * 3) - 1;
+
+            currX += incX;
+            currZ += incZ;
+
+            if (currX >= this.worldSize || currX < 0 || currZ >= this.worldSize || currZ < 0) {
+                continue;
+            }
+
+            const slot = this.matrix[currX][currZ];
+
+            const cube = new Cube(this.context, this.program, this.slotSize);
+            cube.translate(
+                this.initialPoint.x + currX * this.slotSize, 
+                this.initialPoint.y - slot.length * this.slotSize,
+                this.initialPoint.z + currZ * this.slotSize
+            )
+            slot.push(cube);
+
+            blocks--;
+        }
+    }
+    
+    /**
+     * Create mountain
+     *
+     * @private
+     * @param {number} x Position in x
+     * @param {number} z Position in z
+     * @param {number} radius Radius size
+     * @returns
+     * @memberof Surface
+     */
     private createMountain(x: number, z: number, radius: number) {
         if (x - radius < 0 || z - radius < 0) {
             return;
         }
-
-        const colors = [Color.Red, Color.Blue, Color.Earth];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
         while (radius > 0) {
             for (let i = -radius; i < radius; i++) {
@@ -134,7 +189,7 @@ export class Surface extends BaseObject {
                     const currZ = z + j;
 
                     const slot = this.matrix[currX][currZ];
-                    const cube = new Cube(this.context, this.program, this.slotSize, randomColor);
+                    const cube = new Cube(this.context, this.program, this.slotSize);
                     cube.translate(
                         this.initialPoint.x + currX * this.slotSize, 
                         this.initialPoint.y - slot.length * this.slotSize,

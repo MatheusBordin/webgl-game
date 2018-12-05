@@ -11,16 +11,6 @@ import { BaseProgram } from "./base";
 export class BasicProgram extends BaseProgram {
     public program: WebGLProgram;
 
-    public attributeLocations: {
-        vertexPosition: number;
-        vertexColor: number;
-    };
-    
-    public uniformLocations: {
-        projectionMatrix: WebGLUniformLocation;
-        modelViewMatrix: WebGLUniformLocation;
-    };
-
     constructor(private readonly gl: WebGLRenderingContext) {
         super();
 
@@ -55,13 +45,16 @@ export class BasicProgram extends BaseProgram {
         // Set attribute locations.
         this.attributeLocations = {
             vertexPosition: this.gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexColor: this.gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+            vertexNormal: this.gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
+            textureCoord: this.gl.getAttribLocation(shaderProgram, 'aTextureCoord')
         };
 
         // Set uniform locations.
         this.uniformLocations = {
             projectionMatrix: this.gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+            normalMatrix: this.gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
+            uSampler: this.gl.getUniformLocation(shaderProgram, 'uSampler')
         };
     }
 

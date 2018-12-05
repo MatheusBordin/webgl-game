@@ -4,22 +4,30 @@ import { IObjectBuffer } from "../types/object-buffer";
 import { BaseProgram } from "../programs/base";
 import { IPosition } from "../types/position";
 import { Color } from "../helpers/color";
+import { AtlasTexture } from "../textures/atlas";
 
 export class Cube extends BaseObject {
     private size: number;
-    private color: number[];
-    private topColor: number[];
+    private texture: any;
+    private grassArround: boolean = false;
 
-    constructor(context: WebGLRenderingContext, program: BaseProgram, size: number, color = Color.Earth, topColor?: number[]) {
+    constructor(context: WebGLRenderingContext, program: BaseProgram, size: number) {
         super(context, program);
 
         this.size = size;
-        this.color = color;
-        this.topColor = topColor || this.color;
+        this.texture = AtlasTexture.load(context);
         this.initBuffers();
     }
 
-    draw(time: number): void {
+    public setGrassArround(value: boolean) {
+        if (value !== this.grassArround) {
+            this.grassArround = value;
+            this.updateTextureBuffer();
+        }
+    }
+
+    public draw(time: number): void {
+        // Position
         const positionComponents = 3;
         const positionType = this.context.FLOAT;
         const positionNormalize = false;
@@ -37,36 +45,64 @@ export class Cube extends BaseObject {
         );
         this.context.enableVertexAttribArray(this.program.attributeLocations.vertexPosition);
 
-        const colorComponents = 4;
-        const colorType = this.context.FLOAT;
-        const colorNormalize = false;
-        const colorStride = 0;
-        const colorOffset = 0;
+        // Texture
+        const textureComponents = 2;
+        const textureType = this.context.FLOAT;
+        const textureNormalize = false;
+        const textureStride = 0;
+        const textureOffset = 0;
 
-        this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.color);
+        this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.texture);
         this.context.vertexAttribPointer(
-            this.program.attributeLocations.vertexColor,
-            colorComponents,
-            colorType,
-            colorNormalize,
-            colorStride,
-            colorOffset
+            this.program.attributeLocations.textureCoord,
+            textureComponents,
+            textureType,
+            textureNormalize,
+            textureStride,
+            textureOffset
         );
+        this.context.enableVertexAttribArray(this.program.attributeLocations.textureCoord);
 
-        this.context.enableVertexAttribArray(this.program.attributeLocations.vertexColor);
+        // Normal
+        const normalComponents = 3;
+        const normalType = this.context.FLOAT;
+        const normalNormalize = false;
+        const normalStride = 0;
+        const normalOffset = 0;
+
+        this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.normal);
+        this.context.vertexAttribPointer(
+            this.program.attributeLocations.vertexNormal,
+            normalComponents,
+            normalType,
+            normalNormalize,
+            normalStride,
+            normalOffset
+        );
+        this.context.enableVertexAttribArray(this.program.attributeLocations.vertexNormal);
+
+        // Indices
         this.context.bindBuffer(this.context.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
-    
+
+        // Set program
+        this.context.useProgram(this.program.program);
+
+        // Choose texture
+        this.context.activeTexture(this.context.TEXTURE0);
+        this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
+        this.context.uniform1i(this.program.uniformLocations.uSampler, 0);
+        
+        // Draw
         const vertexCount = 36;
         const type = this.context.UNSIGNED_SHORT;
         const offset = 0;
-
-        this.context.useProgram(this.program.program);
         this.context.drawElements(this.context.TRIANGLES, vertexCount, type, offset);
     }
 
     protected initBuffers() {
         this.updatePositionBuffer();
-        this.updateColorBuffer();
+        this.updateNormalBuffer();
+        this.updateTextureBuffer();
         this.updateIndicesBuffer();
     }
 
@@ -128,28 +164,76 @@ export class Cube extends BaseObject {
         this.buffers.position = positionBuffer;
     }
 
-    protected updateColorBuffer() {
-        const faceColors = [
-            this.color, 
-            this.color,     
-            this.color,  
-            this.topColor, 
-            this.color,  
-            this.color,  
+    protected updateNormalBuffer() {
+        const normalBuffer = this.context.createBuffer();
+        this.context.bindBuffer(this.context.ARRAY_BUFFER, normalBuffer);
+
+        const vertexNormals = [
+            // Front
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+             0.0,  0.0,  1.0,
+        
+            // Back
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+             0.0,  0.0, -1.0,
+        
+            // Top
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+             0.0,  1.0,  0.0,
+        
+            // Bottom
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+             0.0, -1.0,  0.0,
+        
+            // Right
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+             1.0,  0.0,  0.0,
+        
+            // Left
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0,
+            -1.0,  0.0,  0.0
         ];
 
-        let colors: number[] = [];
-        for (var j = 0; j < faceColors.length; ++j) {
-            const c = faceColors[j];
+        this.context.bufferData(this.context.ARRAY_BUFFER, new Float32Array(vertexNormals), this.context.STATIC_DRAW);
+        this.buffers.normal = normalBuffer;
+    }
 
-            colors = colors.concat(c, c, c, c);
-        }
+    protected updateTextureBuffer() {
+        const textureCoordBuffer = this.context.createBuffer();
+        this.context.bindBuffer(this.context.ARRAY_BUFFER, textureCoordBuffer);
 
-        const colorBuffer = this.context.createBuffer();
-        this.context.bindBuffer(this.context.ARRAY_BUFFER, colorBuffer);
-        this.context.bufferData(this.context.ARRAY_BUFFER, new Float32Array(colors), this.context.STATIC_DRAW);
+        const arroundOne = this.grassArround ? AtlasTexture.earthAndGrassCube : AtlasTexture.earthCube;
+        const arroundTwo = this.grassArround ? AtlasTexture.earthAndGrassCubeTwo : AtlasTexture.earthCube;
 
-        this.buffers.color = colorBuffer;
+        const textureCoordinates = [
+            // Front
+            ...arroundOne,
+            // Back
+            ...arroundTwo,
+            // Bottom
+            ...AtlasTexture.earthCube,
+            // Top
+            ...AtlasTexture.grassCube,
+            // Left
+            ...arroundTwo,
+            // Right
+            ...arroundOne,
+        ];
+
+        this.context.bufferData(this.context.ARRAY_BUFFER, new Float32Array(textureCoordinates), this.context.STATIC_DRAW);
+        this.buffers.texture = textureCoordBuffer;
     }
 
     protected updateIndicesBuffer() {
@@ -157,7 +241,7 @@ export class Cube extends BaseObject {
         
         const indices = [
             0,  1,  2,      0,  2,  3,    // front
-            4,  5,  6,      4,  6,  7,    // back
+            4,  6,  7,      4,  5,  6,    // back
             8,  9,  10,     8,  10, 11,   // top
             12, 13, 14,     12, 14, 15,   // bottom
             16, 17, 18,     16, 18, 19,   // right
