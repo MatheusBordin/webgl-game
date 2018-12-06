@@ -5,7 +5,12 @@ import { IDGenerator, UniqueID } from "../helpers/unique-id";
 import { ColorProgram } from "../programs/color";
 
 export abstract class BaseObject {
-    public id: number;
+    public topId: number;
+    public bottomId: number;
+    public frontId: number;
+    public backId: number;
+    public leftId: number;
+    public rightId: number;
     public heightPosition: number;
     private uniqueId: UniqueID;
 
@@ -23,7 +28,12 @@ export abstract class BaseObject {
         this.context = context;
         this.program = program;
         this.virtualProgram = virtualProgram;
-        this.id = IDGenerator.next();
+        this.topId = IDGenerator.next();
+        this.bottomId = IDGenerator.next();
+        this.frontId = IDGenerator.next();
+        this.backId = IDGenerator.next();
+        this.leftId = IDGenerator.next();
+        this.rightId = IDGenerator.next();
         this.uniqueId = new UniqueID(this.context);
     }
 
@@ -36,15 +46,20 @@ export abstract class BaseObject {
     }
 
     protected updateColorBuffer() {
-        const colorById = this.uniqueId.toColor(this.id);
+        const top = this.uniqueId.toColor(this.topId);
+        const bottom = this.uniqueId.toColor(this.bottomId);
+        const right = this.uniqueId.toColor(this.rightId);
+        const left = this.uniqueId.toColor(this.leftId);
+        const front = this.uniqueId.toColor(this.frontId);
+        const back = this.uniqueId.toColor(this.backId);
 
         const faceColors = [
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Front face: white
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Back face: red
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Top face: green
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Bottom face: blue
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Right face: yellow
-            [colorById[0], colorById[1], colorById[2], colorById[3]],    // Left face: purple
+            [front[0], front[1], front[2], front[3]],    // Front face: white
+            [back[0], back[1], back[2], back[3]],    // Back face: red
+            [bottom[0], bottom[1], bottom[2], bottom[3]],    // Top face: green
+            [top[0], top[1], top[2], top[3]],    // Bottom face: blue
+            [right[0], right[1], right[2], right[3]],    // Right face: yellow
+            [left[0], left[1], left[2], left[3]],    // Left face: purple
         ];
 
         let colors: number[] = [];

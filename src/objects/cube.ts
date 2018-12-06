@@ -273,17 +273,17 @@ export class Cube extends BaseObject {
     
             textureCoordinates = [
                 // Front
-                ...arroundOne,
+                ...AtlasTexture.grassCube,
                 // Back
-                ...arroundTwo,
+                ...AtlasTexture.grassCube,
                 // Bottom
-                ...AtlasTexture.earthCube,
+                ...AtlasTexture.grassCube,
                 // Top
-                ...topTexture,
+                ...AtlasTexture.grassCube,
                 // Left
-                ...arroundTwo,
+                ...AtlasTexture.grassCube,
                 // Right
-                ...arroundOne,
+                ...AtlasTexture.grassCube,
             ];
         } else if (this.mode === CubeMode.EARTH) {
             textureCoordinates = [

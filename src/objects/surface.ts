@@ -4,6 +4,8 @@ import { Cube } from "./cube";
 import { IPosition } from "../types/position";
 import { Color } from "../helpers/color";
 import { IBlackListItem } from "../types/random-surface-bl-item";
+import { FaceDetection } from "../types/face-detection";
+import { Face } from "../types/face";
 
 /**
  * Surface object.
@@ -79,28 +81,166 @@ export class Surface extends BaseObject {
      * @memberof Surface
      */
     public async addObjectUpTo(id: number) {
+        const positionDetail = this.findObjectAndFace(id);
+
+        if (!positionDetail) {
+            return;
+        }
+
+        if (positionDetail.face === Face.TOP) {
+            console.log('top');
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition + 1;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        } else if (positionDetail.face === Face.BOTTOM) {
+            console.log('bottom');
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition - 1;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        } else if (positionDetail.face === Face.LEFT) {
+            console.log('left');
+            positionDetail.x--;
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        } else if (positionDetail.face === Face.RIGHT) {
+            console.log('right');
+            positionDetail.x++;
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        } else if (positionDetail.face === Face.BACK) {
+            console.log('back');
+            positionDetail.z--;
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        } else if (positionDetail.face === Face.FRONT) {
+            console.log('front');
+            positionDetail.z++;
+            const slot = this.matrix[positionDetail.x][positionDetail.z];
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = positionDetail.heightPosition;
+            cube.translate(
+                this.initialPoint.x + positionDetail.x * this.slotSize, 
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
+                this.initialPoint.z + positionDetail.z * this.slotSize
+            );
+    
+            cube.updateTextureBuffer();
+            slot.push(cube);
+        }
+    }
+
+    /**
+     * Detect face selection
+     *
+     * @param {number} id
+     * @returns {FaceDetection}
+     * @memberof Surface
+     */
+    public findObjectAndFace(id: number): FaceDetection {
+        const response = new FaceDetection();
+
         for (let i = 0; i < this.matrix.length; i++) {
             const line = this.matrix[i];
             for (let j = 0; j < line.length; j++) {
                 const slot = this.matrix[i][j];
                 for (const object of slot) {
-                    if (object.id === id) {
-                        const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
-                        cube.heightPosition = this.getNextHeightInSlot(slot, object.heightPosition);
-                        cube.translate(
-                            this.initialPoint.x + i * this.slotSize, 
-                            this.initialPoint.y - cube.heightPosition * this.slotSize,
-                            this.initialPoint.z + j * this.slotSize
-                        );
-
-                        cube.updateTextureBuffer();
-
-                        slot.push(cube);
-                        return;
+                    if (object.topId === id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.TOP;
+                        
+                        return response;
+                    } else if (object.bottomId == id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.BOTTOM;
+                        
+                        return response;
+                    } else if (object.frontId == id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.FRONT;
+                        
+                        return response;
+                    } else if (object.backId == id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.BACK;
+                        
+                        return response;
+                    } else if (object.leftId == id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.LEFT;
+                        
+                        return response;
+                    } else if (object.rightId == id) {
+                        response.x = i;
+                        response.z = j;
+                        response.object = object;
+                        response.heightPosition = object.heightPosition;
+                        response.face = Face.RIGHT;
+                        
+                        return response;
                     }
                 }
             }
         }
+
+        return null;
     }
 
     /**
@@ -111,19 +251,15 @@ export class Surface extends BaseObject {
      * @memberof Surface
      */
     public async removeObject(id: number) {
-        for (let i = 0; i < this.matrix.length; i++) {
-            const line = this.matrix[i];
-            for (let j = 0; j < line.length; j++) {
-                const slot = line[j];
-                for (let k = 0; k < slot.length; k++) {
-                    const object = slot[k];
-                    if (object.id === id) {
-                        slot.splice(k, 1);
-                        return;
-                    }
-                }
-            }
+        const pd = this.findObjectAndFace(id);
+
+        if (!pd) {
+            return;
         }
+
+        const slot = this.matrix[pd.x][pd.z];
+        const idx = slot.indexOf(pd.object);
+        slot.splice(idx, 1);
     }
 
     /**
