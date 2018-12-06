@@ -1,5 +1,5 @@
-import { fragmentShader as fsShader } from "../shaders/fragmentShader";
-import { verticeShader as vsShader } from "../shaders/verticeShader";
+import { fragmentShader as fsShader } from "../shaders/color/fragmentShader";
+import { verticeShader as vsShader } from "../shaders/color/verticeShader";
 import { BaseProgram } from "./base";
 
 /**
@@ -8,8 +8,18 @@ import { BaseProgram } from "./base";
  * @export
  * @class BasicProgram
  */
-export class BasicProgram extends BaseProgram {
+export class ColorProgram extends BaseProgram {
     public program: WebGLProgram;
+
+    public attributeLocations: {
+        vertexPosition: number;
+        vertexColor: number;
+    };
+    
+    public uniformLocations: {
+        projectionMatrix: WebGLUniformLocation;
+        modelViewMatrix: WebGLUniformLocation;
+    };
 
     constructor(private readonly gl: WebGLRenderingContext) {
         super();
@@ -45,16 +55,13 @@ export class BasicProgram extends BaseProgram {
         // Set attribute locations.
         this.attributeLocations = {
             vertexPosition: this.gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-            vertexNormal: this.gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
-            textureCoord: this.gl.getAttribLocation(shaderProgram, 'aTextureCoord')
+            vertexColor: this.gl.getAttribLocation(shaderProgram, 'aVertexColor'),
         };
 
         // Set uniform locations.
         this.uniformLocations = {
             projectionMatrix: this.gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: this.gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-            normalMatrix: this.gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
-            uSampler: this.gl.getUniformLocation(shaderProgram, 'uSampler')
         };
     }
 

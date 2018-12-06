@@ -3,6 +3,8 @@ import { BaseProgram } from "../programs/base";
 import { IMoveDirection } from "../types/move-direction";
 import { IMousePoint } from "../types/mouse-point";
 import { IPosition } from "../types/position";
+import { TextureProgram } from "../programs/texture";
+import { ColorProgram } from "../programs/color";
 
 export class Camera {
     private projectionMatrix: mat4;
@@ -15,6 +17,7 @@ export class Camera {
     constructor (
         private readonly gl: WebGLRenderingContext, 
         private readonly program: BaseProgram,
+        private readonly virtualProgram: BaseProgram,
         private fieldOfView = 45 * Math.PI / 180,
         private zNear = 0.1,
         private zFar = 200,
@@ -34,28 +37,51 @@ export class Camera {
      * @memberof Camera
      */
     public draw() {
-        this.gl.useProgram(this.program.program);
+        const program = this.program as TextureProgram;
+        this.gl.useProgram(program.program);
 
         const normalMatrix = mat4.create();
         mat4.invert(normalMatrix, this.modelViewMatrix);
         mat4.transpose(normalMatrix, normalMatrix);
         
         this.gl.uniformMatrix4fv(
-            this.program.uniformLocations.projectionMatrix,
+            program.uniformLocations.projectionMatrix,
             false,
             this.projectionMatrix
         );
 
         this.gl.uniformMatrix4fv(
-            this.program.uniformLocations.modelViewMatrix,
+            program.uniformLocations.modelViewMatrix,
             false,
             this.modelViewMatrix
         );
 
         this.gl.uniformMatrix4fv(
-            this.program.uniformLocations.normalMatrix,
+            program.uniformLocations.normalMatrix,
             false,
             normalMatrix
+        );
+    }
+
+    /**
+     * Draw camera.
+     *
+     * @memberof Camera
+     */
+    public drawVirtual() {
+        const program = this.virtualProgram as ColorProgram;
+        this.gl.useProgram(program.program);
+        
+        this.gl.uniformMatrix4fv(
+            program.uniformLocations.projectionMatrix,
+            false,
+            this.projectionMatrix
+        );
+
+        this.gl.uniformMatrix4fv(
+            program.uniformLocations.modelViewMatrix,
+            false,
+            this.modelViewMatrix
         );
     }
 

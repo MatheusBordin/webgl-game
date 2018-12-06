@@ -2,10 +2,12 @@ import { IMoveDirection } from "../types/move-direction";
 import { IMousePoint } from "../types/mouse-point";
 
 type ChangeCallback = (keysPress?: IMoveDirection, oldMouse?: IMousePoint, currMose?: IMousePoint) => void;
+type ClickCallback = (x: number, y: number) => void;
 
 export class Control {
     private changeCallback: ChangeCallback = () => null;
     private resizeCallback: () => void = () => null;
+    private clickCallback: ClickCallback = () => null;
     private oldMousePoint: IMousePoint = { x: 0, y: 0 };
     private mousePoint: IMousePoint = { x: 0, y: 0 };
     private keysPress: IMoveDirection = {
@@ -25,8 +27,13 @@ export class Control {
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
         document.addEventListener('mousemove', this.onMouseMove.bind(this))
+        document.addEventListener('click', (e: MouseEvent) => this.clickCallback(e.clientX, e.clientY));
        
         window.addEventListener('resize', () => this.resizeCallback());
+    }
+
+    public onClick(cb: ClickCallback) {
+        this.clickCallback = cb;
     }
 
     public onChange(cb: ChangeCallback) {

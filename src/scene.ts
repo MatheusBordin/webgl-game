@@ -10,6 +10,7 @@ import { Camera } from "./objects/camera";
  */
 export class Scene {
     public canvas: HTMLCanvasElement;
+    public isVirtualRender = false;
     private gl : WebGLRenderingContext;
 
     private prevTime: number = 0;
@@ -108,7 +109,11 @@ export class Scene {
         const deltaTime = currTime - this.prevTime;
         this.prevTime = currTime;
         
-        this.draw(deltaTime);
+        if (this.isVirtualRender) {
+            this.drawVirtual(deltaTime);
+        } else {
+            this.draw(deltaTime);
+        }
         
         requestAnimationFrame(this.render.bind(this));
     }
@@ -116,10 +121,9 @@ export class Scene {
     /**
      * Draw all objects in screen.
      *
-     * @private
      * @memberof Game
      */
-    private draw(time: number) {
+    public draw(time: number) {
         this.gl.clearColor(104/255, 203/255 , 241/255, 1.0);
         this.gl.clearDepth(1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
@@ -133,6 +137,28 @@ export class Scene {
 
         for (const item of this.objects) {
             item.draw(time);
+        }
+    }
+
+    /**
+     * Draw all objects in screen.
+     *
+     * @memberof Game
+     */
+    public drawVirtual(time: number) {
+        this.gl.clearColor(104/255, 203/255 , 241/255, 1.0);
+        this.gl.clearDepth(1.0);
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.depthFunc(this.gl.LEQUAL);
+
+        this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+        // Draw camera;
+        this.camera.drawVirtual();
+
+        for (const item of this.objects) {
+            item.drawVirtual(time);
         }
     }
 }

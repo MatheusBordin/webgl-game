@@ -1,24 +1,35 @@
-import { mat4 } from "gl-matrix";
 import { BaseObject } from "./base";
-import { IObjectBuffer } from "../types/object-buffer";
 import { BaseProgram } from "../programs/base";
 import { IPosition } from "../types/position";
-import { Color } from "../helpers/color";
 import { AtlasTexture } from "../textures/atlas";
+import { TextureProgram } from "../programs/texture";
 
+/**
+ * Cube object.
+ *
+ * @export
+ * @class Cube
+ * @extends {BaseObject}
+ */
 export class Cube extends BaseObject {
     private size: number;
     private texture: any;
     private grassArround: boolean = false;
 
-    constructor(context: WebGLRenderingContext, program: BaseProgram, size: number) {
-        super(context, program);
+    constructor(context: WebGLRenderingContext, program: BaseProgram, virtualProgram: BaseProgram, size: number) {
+        super(context, program, virtualProgram);
 
         this.size = size;
         this.texture = AtlasTexture.load(context);
         this.initBuffers();
     }
 
+    /**
+     * Set grass arround.
+     *
+     * @param {boolean} value
+     * @memberof Cube
+     */
     public setGrassArround(value: boolean) {
         if (value !== this.grassArround) {
             this.grassArround = value;
@@ -26,7 +37,15 @@ export class Cube extends BaseObject {
         }
     }
 
+    /**
+     * Draw cube.
+     *
+     * @param {number} time
+     * @memberof Cube
+     */
     public draw(time: number): void {
+        const program = this.program as TextureProgram;
+
         // Position
         const positionComponents = 3;
         const positionType = this.context.FLOAT;
@@ -36,14 +55,14 @@ export class Cube extends BaseObject {
 
         this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.position);
         this.context.vertexAttribPointer(
-            this.program.attributeLocations.vertexPosition,
+            program.attributeLocations.vertexPosition,
             positionComponents,
             positionType,
             positionNormalize,
             positionStride,
             positionOffset
         );
-        this.context.enableVertexAttribArray(this.program.attributeLocations.vertexPosition);
+        this.context.enableVertexAttribArray(program.attributeLocations.vertexPosition);
 
         // Texture
         const textureComponents = 2;
@@ -54,14 +73,14 @@ export class Cube extends BaseObject {
 
         this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.texture);
         this.context.vertexAttribPointer(
-            this.program.attributeLocations.textureCoord,
+            program.attributeLocations.textureCoord,
             textureComponents,
             textureType,
             textureNormalize,
             textureStride,
             textureOffset
         );
-        this.context.enableVertexAttribArray(this.program.attributeLocations.textureCoord);
+        this.context.enableVertexAttribArray(program.attributeLocations.textureCoord);
 
         // Normal
         const normalComponents = 3;
@@ -72,25 +91,25 @@ export class Cube extends BaseObject {
 
         this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffers.normal);
         this.context.vertexAttribPointer(
-            this.program.attributeLocations.vertexNormal,
+            program.attributeLocations.vertexNormal,
             normalComponents,
             normalType,
             normalNormalize,
             normalStride,
             normalOffset
         );
-        this.context.enableVertexAttribArray(this.program.attributeLocations.vertexNormal);
+        this.context.enableVertexAttribArray(program.attributeLocations.vertexNormal);
 
         // Indices
         this.context.bindBuffer(this.context.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
 
         // Set program
-        this.context.useProgram(this.program.program);
+        this.context.useProgram(program.program);
 
         // Choose texture
         this.context.activeTexture(this.context.TEXTURE0);
         this.context.bindTexture(this.context.TEXTURE_2D, this.texture);
-        this.context.uniform1i(this.program.uniformLocations.uSampler, 0);
+        this.context.uniform1i(program.uniformLocations.uSampler, 0);
         
         // Draw
         const vertexCount = 36;
@@ -99,13 +118,26 @@ export class Cube extends BaseObject {
         this.context.drawElements(this.context.TRIANGLES, vertexCount, type, offset);
     }
 
+    /**
+     * Initialize buffers.
+     *
+     * @protected
+     * @memberof Cube
+     */
     protected initBuffers() {
         this.updatePositionBuffer();
         this.updateNormalBuffer();
         this.updateTextureBuffer();
         this.updateIndicesBuffer();
+        this.updateColorBuffer();
     }
 
+    /**
+     * Update position buffers.
+     *
+     * @protected
+     * @memberof Cube
+     */
     protected updatePositionBuffer() {
         const positionBuffer = this.context.createBuffer();
         const extrPoint: IPosition = {
@@ -164,6 +196,12 @@ export class Cube extends BaseObject {
         this.buffers.position = positionBuffer;
     }
 
+    /**
+     * Update normal buffer.
+     *
+     * @protected
+     * @memberof Cube
+     */
     protected updateNormalBuffer() {
         const normalBuffer = this.context.createBuffer();
         this.context.bindBuffer(this.context.ARRAY_BUFFER, normalBuffer);
@@ -210,6 +248,12 @@ export class Cube extends BaseObject {
         this.buffers.normal = normalBuffer;
     }
 
+    /**
+     * Update texture buffer.
+     *
+     * @protected
+     * @memberof Cube
+     */
     protected updateTextureBuffer() {
         const textureCoordBuffer = this.context.createBuffer();
         this.context.bindBuffer(this.context.ARRAY_BUFFER, textureCoordBuffer);
@@ -236,6 +280,12 @@ export class Cube extends BaseObject {
         this.buffers.texture = textureCoordBuffer;
     }
 
+    /**
+     * Update indices buffer.
+     *
+     * @protected
+     * @memberof Cube
+     */
     protected updateIndicesBuffer() {
         const indexBuffer = this.context.createBuffer();
         

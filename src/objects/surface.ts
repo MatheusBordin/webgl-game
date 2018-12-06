@@ -19,10 +19,11 @@ export class Surface extends BaseObject {
     constructor(
         protected readonly context: WebGLRenderingContext, 
         protected readonly program: BaseProgram, 
+        protected readonly virtualProgram: BaseProgram,
         private worldSize = 40,
         private slotSize = 5
     ) {
-        super(context, program);
+        super(context, program, virtualProgram);
         this.initializeMatrix();
     }
 
@@ -44,6 +45,51 @@ export class Surface extends BaseObject {
 
                     object.draw(time);
                 } 
+            }
+        }
+    }
+
+    /**
+     * Draw all objects in surface.
+     *
+     * @param {number} time
+     * @memberof Surface
+     */
+    public drawVirtual(time: number) {
+        for (const line of this.matrix) {
+            for (const slot of line) {
+                for (let i = slot.length - 1; i >= 0; i--) {
+                    const object = slot[i];
+
+                    if (object instanceof Cube) {
+                        object.setGrassArround(i === slot.length - 1);
+                    }
+
+                    object.drawVirtual(time);
+                } 
+            }
+        }
+    }
+
+    public async addObjectUpTo(id: number) {
+
+        for (let i = 0; i < this.matrix.length; i++) {
+            const line = this.matrix[i];
+            for (let j = 0; j < line.length; j++) {
+                const slot = this.matrix[i][j];
+                for (const object of slot) {
+                    if (object.id === id) {
+                        const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+                        cube.translate(
+                            this.initialPoint.x + i * this.slotSize, 
+                            this.initialPoint.y - slot.length * this.slotSize,
+                            this.initialPoint.z + j * this.slotSize
+                        );
+
+                        slot.push(cube);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -96,7 +142,7 @@ export class Surface extends BaseObject {
             this.matrix[i] = new Array(this.worldSize);
 
             for (let j = 0; j < this.worldSize; j++) {
-                const cube = new Cube(this.context, this.program, this.slotSize);
+                const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
                 cube.translate(
                     this.initialPoint.x + i * this.slotSize, 
                     this.initialPoint.y,
@@ -155,7 +201,7 @@ export class Surface extends BaseObject {
 
             const slot = this.matrix[currX][currZ];
 
-            const cube = new Cube(this.context, this.program, this.slotSize);
+            const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
             cube.translate(
                 this.initialPoint.x + currX * this.slotSize, 
                 this.initialPoint.y - slot.length * this.slotSize,
@@ -189,7 +235,7 @@ export class Surface extends BaseObject {
                     const currZ = z + j;
 
                     const slot = this.matrix[currX][currZ];
-                    const cube = new Cube(this.context, this.program, this.slotSize);
+                    const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
                     cube.translate(
                         this.initialPoint.x + currX * this.slotSize, 
                         this.initialPoint.y - slot.length * this.slotSize,
