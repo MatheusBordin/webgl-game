@@ -6,6 +6,7 @@ import { ColorProgram } from "../programs/color";
 
 export abstract class BaseObject {
     public id: number;
+    public heightPosition: number;
     private uniqueId: UniqueID;
 
     protected context: WebGLRenderingContext;

@@ -3,6 +3,7 @@ import { BaseProgram } from "../programs/base";
 import { IPosition } from "../types/position";
 import { AtlasTexture } from "../textures/atlas";
 import { TextureProgram } from "../programs/texture";
+import { currentCubeMode, CubeMode } from "../helpers/cube-mode";
 
 /**
  * Cube object.
@@ -12,6 +13,7 @@ import { TextureProgram } from "../programs/texture";
  * @extends {BaseObject}
  */
 export class Cube extends BaseObject {
+    private mode: CubeMode;
     private size: number;
     private texture: any;
     private grassArround: boolean = false;
@@ -21,6 +23,7 @@ export class Cube extends BaseObject {
 
         this.size = size;
         this.texture = AtlasTexture.load(context);
+        this.mode = currentCubeMode.current;
         this.initBuffers();
     }
 
@@ -33,7 +36,10 @@ export class Cube extends BaseObject {
     public setGrassArround(value: boolean) {
         if (value !== this.grassArround) {
             this.grassArround = value;
-            this.updateTextureBuffer();
+            
+            if (currentCubeMode.current === CubeMode.GRASS && this.mode === CubeMode.GRASS) {
+                this.updateTextureBuffer();
+            }
         }
     }
 
@@ -254,27 +260,64 @@ export class Cube extends BaseObject {
      * @protected
      * @memberof Cube
      */
-    protected updateTextureBuffer() {
+    public updateTextureBuffer() {
         const textureCoordBuffer = this.context.createBuffer();
         this.context.bindBuffer(this.context.ARRAY_BUFFER, textureCoordBuffer);
 
-        const arroundOne = this.grassArround ? AtlasTexture.earthAndGrassCube : AtlasTexture.earthCube;
-        const arroundTwo = this.grassArround ? AtlasTexture.earthAndGrassCubeTwo : AtlasTexture.earthCube;
+        let textureCoordinates: number[];
 
-        const textureCoordinates = [
-            // Front
-            ...arroundOne,
-            // Back
-            ...arroundTwo,
-            // Bottom
-            ...AtlasTexture.earthCube,
-            // Top
-            ...AtlasTexture.grassCube,
-            // Left
-            ...arroundTwo,
-            // Right
-            ...arroundOne,
-        ];
+        if (this.mode === CubeMode.GRASS) {
+            const arroundOne = this.grassArround ? AtlasTexture.earthAndGrassCube : AtlasTexture.earthCube;
+            const arroundTwo = this.grassArround ? AtlasTexture.earthAndGrassCubeTwo : AtlasTexture.earthCube;
+            const topTexture = this.grassArround ? AtlasTexture.grassCube : AtlasTexture.earthCube;
+    
+            textureCoordinates = [
+                // Front
+                ...arroundOne,
+                // Back
+                ...arroundTwo,
+                // Bottom
+                ...AtlasTexture.earthCube,
+                // Top
+                ...topTexture,
+                // Left
+                ...arroundTwo,
+                // Right
+                ...arroundOne,
+            ];
+        } else if (this.mode === CubeMode.EARTH) {
+            textureCoordinates = [
+                // Front
+                ...AtlasTexture.earthCube,
+                // Back
+                ...AtlasTexture.earthCube,
+                // Bottom
+                ...AtlasTexture.earthCube,
+                // Top
+                ...AtlasTexture.earthCube,
+                // Left
+                ...AtlasTexture.earthCube,
+                // Right
+                ...AtlasTexture.earthCube,
+            ];
+        } else if (this.mode === CubeMode.IRON) {
+            textureCoordinates = [
+                // Front
+                ...AtlasTexture.darkCube,
+                // Back
+                ...AtlasTexture.darkCube,
+                // Bottom
+                ...AtlasTexture.darkCube,
+                // Top
+                ...AtlasTexture.darkCube,
+                // Left
+                ...AtlasTexture.darkCube,
+                // Right
+                ...AtlasTexture.darkCube,
+            ];
+        }
+
+        
 
         this.context.bufferData(this.context.ARRAY_BUFFER, new Float32Array(textureCoordinates), this.context.STATIC_DRAW);
         this.buffers.texture = textureCoordBuffer;

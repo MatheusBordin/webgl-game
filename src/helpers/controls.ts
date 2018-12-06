@@ -1,13 +1,17 @@
 import { IMoveDirection } from "../types/move-direction";
 import { IMousePoint } from "../types/mouse-point";
+import { CubeMode } from "./cube-mode";
 
 type ChangeCallback = (keysPress?: IMoveDirection, oldMouse?: IMousePoint, currMose?: IMousePoint) => void;
 type ClickCallback = (x: number, y: number) => void;
+type ChangeCubeCallback = (mode: CubeMode) => void;
 
 export class Control {
     private changeCallback: ChangeCallback = () => null;
     private resizeCallback: () => void = () => null;
     private clickCallback: ClickCallback = () => null;
+    private rightClickCallback: ClickCallback = () => null;
+    private changeCubeCallback: ChangeCubeCallback  = () => null;
     private oldMousePoint: IMousePoint = { x: 0, y: 0 };
     private mousePoint: IMousePoint = { x: 0, y: 0 };
     private keysPress: IMoveDirection = {
@@ -27,13 +31,27 @@ export class Control {
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('keyup', this.onKeyUp.bind(this));
         document.addEventListener('mousemove', this.onMouseMove.bind(this))
-        document.addEventListener('click', (e: MouseEvent) => this.clickCallback(e.clientX, e.clientY));
+        document.addEventListener('mousedown', (e: MouseEvent) => {
+            if (e.button === 0) {
+                this.clickCallback(e.clientX, e.clientY);
+            } else {
+                this.rightClickCallback(e.clientX, e.clientY);
+            }
+        });
        
         window.addEventListener('resize', () => this.resizeCallback());
     }
 
+    public onChangeCube(cb: ChangeCubeCallback) {
+        this.changeCubeCallback = cb;
+    }
+
     public onClick(cb: ClickCallback) {
         this.clickCallback = cb;
+    }
+
+    public onRightClick(cb: ClickCallback) {
+        this.rightClickCallback = cb;
     }
 
     public onChange(cb: ChangeCallback) {
@@ -75,6 +93,12 @@ export class Control {
         } else if (event.keyCode == 16) {
             // Down
             this.keysPress.down = true;    
+        } else if (event.keyCode == 49) {
+            this.changeCubeCallback(CubeMode.EARTH);
+        } else if (event.keyCode == 50) {
+            this.changeCubeCallback(CubeMode.IRON);
+        } else if (event.keyCode == 51) {
+            this.changeCubeCallback(CubeMode.GRASS);
         } else {
             return;
         }

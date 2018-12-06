@@ -40,7 +40,7 @@ export class Surface extends BaseObject {
                     const object = slot[i];
 
                     if (object instanceof Cube) {
-                        object.setGrassArround(i === slot.length - 1);
+                        object.setGrassArround(this.getMaxHeightOfSlot(slot) === object.heightPosition);
                     }
 
                     object.draw(time);
@@ -71,8 +71,14 @@ export class Surface extends BaseObject {
         }
     }
 
+    /**
+     * Add object up to de id object.
+     *
+     * @param {number} id
+     * @returns
+     * @memberof Surface
+     */
     public async addObjectUpTo(id: number) {
-
         for (let i = 0; i < this.matrix.length; i++) {
             const line = this.matrix[i];
             for (let j = 0; j < line.length; j++) {
@@ -80,11 +86,14 @@ export class Surface extends BaseObject {
                 for (const object of slot) {
                     if (object.id === id) {
                         const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+                        cube.heightPosition = this.getNextHeightInSlot(slot, object.heightPosition);
                         cube.translate(
                             this.initialPoint.x + i * this.slotSize, 
-                            this.initialPoint.y - slot.length * this.slotSize,
+                            this.initialPoint.y - cube.heightPosition * this.slotSize,
                             this.initialPoint.z + j * this.slotSize
                         );
+
+                        cube.updateTextureBuffer();
 
                         slot.push(cube);
                         return;
@@ -92,6 +101,62 @@ export class Surface extends BaseObject {
                 }
             }
         }
+    }
+
+    /**
+     * Remove object by id.
+     *
+     * @param {number} id
+     * @returns
+     * @memberof Surface
+     */
+    public async removeObject(id: number) {
+        for (let i = 0; i < this.matrix.length; i++) {
+            const line = this.matrix[i];
+            for (let j = 0; j < line.length; j++) {
+                const slot = line[j];
+                for (let k = 0; k < slot.length; k++) {
+                    const object = slot[k];
+                    if (object.id === id) {
+                        slot.splice(k, 1);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Get next height of slot.
+     *
+     * @param {BaseObject[]} slot
+     * @param {number} [initialIndex=0]
+     * @returns
+     * @memberof Surface
+     */
+    public getNextHeightInSlot(slot: BaseObject[], initialIndex = 0) {
+        const heights = slot.map(x => x.heightPosition).filter(x => x >= initialIndex).sort();
+        let result = initialIndex + 1;
+
+        for (const item of heights) {
+            if (item == result) {
+                result = item + 1;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Get max height.
+     *
+     * @param {BaseObject[]} slot
+     * @returns
+     * @memberof Surface
+     */
+    public getMaxHeightOfSlot(slot: BaseObject[]) {
+        const heights = slot.map(x => x.heightPosition).sort();
+        return heights[heights.length - 1];
     }
 
     /**
@@ -143,6 +208,7 @@ export class Surface extends BaseObject {
 
             for (let j = 0; j < this.worldSize; j++) {
                 const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+                cube.heightPosition = 0;
                 cube.translate(
                     this.initialPoint.x + i * this.slotSize, 
                     this.initialPoint.y,
@@ -202,9 +268,10 @@ export class Surface extends BaseObject {
             const slot = this.matrix[currX][currZ];
 
             const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+            cube.heightPosition = slot.length;
             cube.translate(
                 this.initialPoint.x + currX * this.slotSize, 
-                this.initialPoint.y - slot.length * this.slotSize,
+                this.initialPoint.y - cube.heightPosition * this.slotSize,
                 this.initialPoint.z + currZ * this.slotSize
             )
             slot.push(cube);
@@ -236,9 +303,10 @@ export class Surface extends BaseObject {
 
                     const slot = this.matrix[currX][currZ];
                     const cube = new Cube(this.context, this.program, this.virtualProgram, this.slotSize);
+                    cube.heightPosition = slot.length;
                     cube.translate(
                         this.initialPoint.x + currX * this.slotSize, 
-                        this.initialPoint.y - slot.length * this.slotSize,
+                        this.initialPoint.y - cube.heightPosition * this.slotSize,
                         this.initialPoint.z + currZ * this.slotSize
                     )
                     slot.push(cube);
